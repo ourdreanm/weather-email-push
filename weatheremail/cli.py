@@ -206,6 +206,7 @@ def _print_settings(cfg: Dict[str, Any]) -> None:
     print(bold("  [7] 发送策略"))
     print(f"      无预警也发 : {onoff(cfg['send'].get('always_send', True))}")
     print(f"      温馨提示语 : {onoff(cfg['send'].get('warm_tips', True))}")
+    print(f"      甜蜜模式   : {onoff(cfg['send'].get('sweet_mode', False))}")
     print(bold("  [10] 推送渠道（微信 / QQ / Telegram …）"))
     channels = cfg.get("notify", {}).get("channels", []) or []
     if channels:
@@ -372,6 +373,10 @@ def _edit_send(cfg: Dict[str, Any]) -> None:
     cfg["send"]["warm_tips"] = _input_bool(
         "  在推送末尾附上温馨提示语",
         bool(cfg["send"].get("warm_tips", True)),
+    )
+    cfg["send"]["sweet_mode"] = _input_bool(
+        "  情侣甜蜜模式（抖音热门关心体，推给女朋友就打开）",
+        bool(cfg["send"].get("sweet_mode", False)),
     )
     print(green("  已更新发送策略"))
 

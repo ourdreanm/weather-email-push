@@ -386,7 +386,8 @@ def render_email(
     if cfg.get("send", {}).get("warm_tips", True):
         from .caring import warm_tips
 
-        parts.append(_render_warm_tips(warm_tips(result, fetched_at)))
+        sweet = bool(cfg.get("send", {}).get("sweet_mode", False))
+        parts.append(_render_warm_tips(warm_tips(result, fetched_at, sweet=sweet)))
 
     # 页脚
     api_note = result.now.raw_source if result.now else ""
@@ -491,7 +492,8 @@ def render_text(
     if cfg.get("send", {}).get("warm_tips", True):
         from .caring import warm_tips
 
-        tips = warm_tips(result, fetched_at)
+        sweet = bool(cfg.get("send", {}).get("sweet_mode", False))
+        tips = warm_tips(result, fetched_at, sweet=sweet)
         if tips:
             lines.append("")
             lines.append(b("💛 温馨提示"))

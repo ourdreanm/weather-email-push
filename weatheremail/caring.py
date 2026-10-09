@@ -25,6 +25,54 @@ _DAILY_GREETINGS = [
     "把今天过成值得纪念的一天 ✨",
 ]
 
+# ------------------------------------------------------------ 情侣甜蜜模式（抖音热门关心体）
+
+_SWEET_GREETINGS = [
+    "宝贝，新的一天也要开开心心的 💛",
+    "想你了，记得也要想我 💭",
+    "今天也要乖乖吃饭，听到没 🍚",
+    "你是我藏在心里的糖 🍬",
+    "忙归忙，记得喝水，我会监督你的 💧",
+    "今天的你也是最可爱的 ✨",
+    "天冷了记得穿秋裤，听话 🧦",
+]
+
+_SWEET_TIPS = {
+    # key: (匹配预警标题关键词元组, 话术)
+    "temp_drop": "降温了宝贝，多穿点，别让我担心你 🧥",
+    "temp_rise": "天热了宝贝，多喝水，乖 🌤",
+    "hail": "可能有冰雹，乖乖待在室内别乱跑，我会担心的 🧊",
+    "snow": "下雪了宝贝，穿暖和点，小心路滑，我牵着你 ❄",
+    "rain": "下雨了宝贝，出门记得带伞，淋湿了我会心疼的 ☔",
+    "fog": "雾霾天少出门，出门记得戴口罩，保护好自己 😷",
+    "wind": "风好大，走路小心点，别被吹跑了，吹跑了我去哪找你 🍃",
+    "hot": "高温天，乖乖待在凉快的地方，多喝热水 🌞",
+    "cold": "零下啦，把自己裹成小粽子，暖暖的才可爱 🧣",
+    "big_gap": "昼夜温差大，早晚加件衣服，听话 🌗",
+    "sunny": "今天天气超好，适合和喜欢的人出门走走，比如我 ☀",
+    "cooling": "这两天在降温，记得添衣，想你 🧥",
+    "warming": "这两天在升温，别捂太多，么么哒 🌤",
+}
+
+
+def _sweet_for_alert(alert_kind: str, title: str) -> Optional[str]:
+    if alert_kind == "temp_drop":
+        return _SWEET_TIPS["temp_drop"]
+    if alert_kind == "temp_rise":
+        return _SWEET_TIPS["temp_rise"]
+    if _has(title, "冰雹", "冻雨"):
+        return _SWEET_TIPS["hail"]
+    if _has(title, "雪"):
+        return _SWEET_TIPS["snow"]
+    if _has(title, "雨"):
+        return _SWEET_TIPS["rain"]
+    if _has(title, "雾", "霾", "沙尘"):
+        return _SWEET_TIPS["fog"]
+    if _has(title, "风"):
+        return _SWEET_TIPS["wind"]
+    return None
+
+
 # ------------------------------------------------------------ 按天气触发的话术
 
 
@@ -33,19 +81,27 @@ def _has(text: str, *keywords: str) -> bool:
 
 
 def warm_tips(
-    result: AlertResult, fetched_at: Optional[datetime] = None
+    result: AlertResult,
+    fetched_at: Optional[datetime] = None,
+    sweet: bool = False,
 ) -> List[str]:
-    """按天气情况生成温馨提示列表（去重、保序）。"""
+    """按天气情况生成温馨提示列表（去重、保序）。
+
+    sweet=True 时切换为情侣甜蜜模式（抖音热门关心体）。
+    """
     fetched_at = fetched_at or datetime.now()
     tips: List[str] = []
 
-    def add(tip: str) -> None:
-        if tip not in tips:
+    def add(tip: Optional[str]) -> None:
+        if tip and tip not in tips:
             tips.append(tip)
 
     # 1. 先看预警
     for alert in result.alerts or []:
         title = alert.title or ""
+        if sweet:
+            add(_sweet_for_alert(alert.kind, title))
+            continue
         if alert.kind == "temp_drop":
             add("降温了，记得添衣保暖，别着凉 🧥")
         elif alert.kind == "temp_rise":
@@ -64,27 +120,41 @@ def warm_tips(
     # 2. 再看明日天气文字（无预警时也给点关心）
     tmr = result.tomorrow
     day_text = (tmr.text_day or "") if tmr else ""
-    if _has(day_text, "雨") and not result.has_alert:
-        add("明天有雨，记得带伞 ☔")
-    if _has(day_text, "雪") and not result.has_alert:
-        add("明天有雪，注意保暖防滑 ❄")
-    if _has(day_text, "雾", "霾", "沙"):
-        add("明天雾气较重，出门戴口罩，開车慢行 😷")
-    if _has(day_text, "晴") and not result.has_alert:
-        add("明天天气不错，适合出门走走，晒晒太阳 ☀")
+    if sweet:
+        if _has(day_text, "雨") and not result.has_alert:
+            add(_SWEET_TIPS["rain"])
+        if _has(day_text, "雪") and not result.has_alert:
+            add(_SWEET_TIPS["snow"])
+        if _has(day_text, "雾", "霾", "沙"):
+            add(_SWEET_TIPS["fog"])
+        if _has(day_text, "晴") and not result.has_alert:
+            add(_SWEET_TIPS["sunny"])
+    else:
+        if _has(day_text, "雨") and not result.has_alert:
+            add("明天有雨，记得带伞 ☔")
+        if _has(day_text, "雪") and not result.has_alert:
+            add("明天有雪，注意保暖防滑 ❄")
+        if _has(day_text, "雾", "霾", "沙"):
+            add("明天雾气较重，出门戴口罩，开车慢行 😷")
+        if _has(day_text, "晴") and not result.has_alert:
+            add("明天天气不错，适合出门走走，晒晒太阳 ☀")
 
     # 3. 温度相关
     if tmr:
         if tmr.temp_max is not None and tmr.temp_max >= 35:
-            add("高温天气，注意防暑降温，避开午间暴晒，多补水 🌞")
+            add(_SWEET_TIPS["hot"] if sweet else "高温天气，注意防暑降温，避开午间暴晒，多补水 🌞")
         if tmr.temp_min is not None and tmr.temp_min <= 0:
-            add("气温在零度以下，注意防寒，老人小孩尽量减少外出 🧣")
+            add(
+                _SWEET_TIPS["cold"]
+                if sweet
+                else "气温在零度以下，注意防寒，老人小孩尽量减少外出 🧣"
+            )
         if (
             tmr.temp_max is not None
             and tmr.temp_min is not None
             and tmr.temp_max - tmr.temp_min >= 10
         ):
-            add("昼夜温差大，早晚记得加件外套 🌗")
+            add(_SWEET_TIPS["big_gap"] if sweet else "昼夜温差大，早晚记得加件外套 🌗")
 
     # 4. 温度变化趋势（未触发预警阈值的小幅变化也提一句）
     change: Dict[str, Any] = result.temp_change or {}
@@ -94,12 +164,13 @@ def warm_tips(
         delta = change.get("delta")
         if delta is not None:
             if delta <= -3:
-                add("这两天在降温，注意添衣 🧥")
+                add(_SWEET_TIPS["cooling"] if sweet else "这两天在降温，注意添衣 🧥")
             elif delta >= 3:
-                add("这两天在升温，别捂太多 🌤")
+                add(_SWEET_TIPS["warming"] if sweet else "这两天在升温，别捂太多 🌤")
 
     # 5. 每日问候（放在最后）
-    idx = fetched_at.timetuple().tm_yday % len(_DAILY_GREETINGS)
-    add(_DAILY_GREETINGS[idx])
+    greetings = _SWEET_GREETINGS if sweet else _DAILY_GREETINGS
+    idx = fetched_at.timetuple().tm_yday % len(greetings)
+    add(greetings[idx])
 
     return tips

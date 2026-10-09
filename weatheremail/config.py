@@ -83,6 +83,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "always_send": True,
         # 在推送末尾附上按天气生成的温馨提示语
         "warm_tips": True,
+        # 情侣甜蜜模式：话术换成抖音热门的情侣关心体（给女朋友推就打开它）
+        "sweet_mode": False,
     },
 }
 

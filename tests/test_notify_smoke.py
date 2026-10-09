@@ -212,5 +212,23 @@ _c2 = _dm(_DC, {"send": {"warm_tips": False}})
 check("关闭开关后不渲染",
       "温馨提示" not in _rt(_R(text_day="晴"), _c2, fetched_at=_d))
 
+
+
+print("== sweet_mode 甜蜜模式 ==")
+from weatheremail.caring import warm_tips as _wt2
+_d = _dt(2026, 10, 9)
+check("甜蜜下雨含心疼",
+      any("心疼" in x for x in _wt2(_R([_Alert(kind="severe", level="danger", title="明天有降雨", detail="", advice="")], text_day="暴雨"), _d, sweet=True)))
+check("甜蜜降温含宝贝",
+      any("宝贝" in x for x in _wt2(_R([_Alert(kind="temp_drop", level="warning", title="气温大幅下降", detail="", advice="")]), _d, sweet=True)))
+check("甜蜜晴天不同话术",
+      _wt2(_R(text_day="晴"), _d, sweet=True) != _wt2(_R(text_day="晴"), _d, sweet=False))
+_c3 = _dm(_DC, {"send": {"sweet_mode": True}})
+check("渲染链路透传 sweet_mode",
+      "比如我" in _rt(_R(text_day="晴"), _c3, fetched_at=_d))
+_c4 = _dm(_DC, {"send": {"sweet_mode": False}})
+check("关闭后无甜蜜话术",
+      "比如我" not in _rt(_R(text_day="晴"), _c4, fetched_at=_d))
+
 print(f"\n共 {passed + failed} 项，通过 {passed}，失败 {failed}")
 sys.exit(1 if failed else 0)
