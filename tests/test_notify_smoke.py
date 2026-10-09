@@ -172,5 +172,45 @@ try:
 except notify.NotifyError:
     check("错误响应抛错", True)
 
+
+
+print("== warm_tips 温馨话术 ==")
+from datetime import datetime as _dt
+from weatheremail.caring import warm_tips as _wt
+from weatheremail.alert import Alert as _Alert, AlertResult as _AR
+from weatheremail.net import DailyForecast as _DF, WeatherNow as _WN
+
+
+def _R(alerts=None, text_day="晴", tmax=25, tmin=15):
+    tmr = _DF(fx_date="2026-10-10", text_day=text_day, text_night=text_day,
+              temp_max=tmax, temp_min=tmin)
+    return _AR(alerts=alerts or [], tomorrow=tmr, now=_WN(temp=20.0, text="晴"),
+               temp_change={})
+
+
+_d = _dt(2026, 10, 9)
+check("暴雨预警配带伞",
+      any("带伞" in x for x in _wt(_R([_Alert(kind="severe", level="danger", title="明天有降雨", detail="", advice="")], text_day="暴雨"), _d)))
+check("降温预警配添衣",
+      any("添衣" in x for x in _wt(_R([_Alert(kind="temp_drop", level="warning", title="气温大幅下降", detail="", advice="")]), _d)))
+check("高温配防暑",
+      any("防暑" in x for x in _wt(_R(text_day="晴", tmax=37, tmin=28), _d)))
+check("晴天配出门走走",
+      any("出门走走" in x for x in _wt(_R(text_day="晴"), _d)))
+check("温差大配加外套",
+      any("温差" in x for x in _wt(_R(text_day="晴", tmax=28, tmin=12), _d)))
+check("每日问候轮换",
+      _wt(_R(), _d)[-1] != _wt(_R(), _dt(2026, 10, 10))[-1])
+from weatheremail.render import render_text as _rt, render_email as _re
+from weatheremail.config import _deep_merge as _dm, DEFAULT_CONFIG as _DC
+_c = _dm(_DC, {})
+check("文本渲染含温馨提示",
+      "温馨提示" in _rt(_R(text_day="晴"), _c, fetched_at=_d))
+check("HTML 渲染含温馨提示",
+      "温馨提示" in _re(_R(text_day="晴"), _c, fetched_at=_d))
+_c2 = _dm(_DC, {"send": {"warm_tips": False}})
+check("关闭开关后不渲染",
+      "温馨提示" not in _rt(_R(text_day="晴"), _c2, fetched_at=_d))
+
 print(f"\n共 {passed + failed} 项，通过 {passed}，失败 {failed}")
 sys.exit(1 if failed else 0)

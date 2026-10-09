@@ -6,7 +6,7 @@
 纯标准库实现，无第三方依赖。
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __appname__ = "weatheremail"
 __summary__ = "天气推送程序（邮件 / 微信 / QQ / Telegram）"
 

@@ -205,6 +205,7 @@ def _print_settings(cfg: Dict[str, Any]) -> None:
     print(f"      记录历史   : {onoff(tmp.get('record_history', True))}")
     print(bold("  [7] 发送策略"))
     print(f"      无预警也发 : {onoff(cfg['send'].get('always_send', True))}")
+    print(f"      温馨提示语 : {onoff(cfg['send'].get('warm_tips', True))}")
     print(bold("  [10] 推送渠道（微信 / QQ / Telegram …）"))
     channels = cfg.get("notify", {}).get("channels", []) or []
     if channels:
@@ -367,6 +368,10 @@ def _edit_send(cfg: Dict[str, Any]) -> None:
     cfg["send"]["always_send"] = _input_bool(
         "  没有预警时也发送普通天气简报",
         bool(cfg["send"].get("always_send", True)),
+    )
+    cfg["send"]["warm_tips"] = _input_bool(
+        "  在推送末尾附上温馨提示语",
+        bool(cfg["send"].get("warm_tips", True)),
     )
     print(green("  已更新发送策略"))
 

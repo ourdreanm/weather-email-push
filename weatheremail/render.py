@@ -382,6 +382,12 @@ def render_email(
         current_temp = result.now.temp if result.now else None
         parts.append(_render_temp_change(result.temp_change, current_temp))
 
+    # 温馨提示卡片
+    if cfg.get("send", {}).get("warm_tips", True):
+        from .caring import warm_tips
+
+        parts.append(_render_warm_tips(warm_tips(result, fetched_at)))
+
     # 页脚
     api_note = result.now.raw_source if result.now else ""
     parts.extend(
@@ -402,6 +408,25 @@ def render_email(
         ]
     )
     return "".join(parts)
+
+
+def _render_warm_tips(tips: List[str]) -> str:
+    """温馨提示 HTML 卡片（暖黄色）。"""
+    if not tips:
+        return ""
+    items = "".join(
+        f'<div style="font-size:14px;color:{COLOR_TEXT};line-height:1.9;">'
+        f"💛 {_e(tip)}</div>"
+        for tip in tips
+    )
+    return (
+        f'<div style="background:#ffffff;border:1px solid {COLOR_BORDER};'
+        f'border-left:4px solid #f9a825;border-radius:8px;'
+        f'padding:16px 18px;margin-bottom:14px;">'
+        f'<div style="font-size:15px;font-weight:700;color:{COLOR_TEXT};'
+        f'margin-bottom:8px;">温馨提示</div>'
+        f"{items}</div>"
+    )
 
 
 def render_text(
@@ -462,6 +487,16 @@ def render_text(
         else:
             word, arrow = "持平", "—"
         lines.append(f"气温{word}：{arrow} {abs(delta):.1f}℃（较上次记录）")
+
+    if cfg.get("send", {}).get("warm_tips", True):
+        from .caring import warm_tips
+
+        tips = warm_tips(result, fetched_at)
+        if tips:
+            lines.append("")
+            lines.append(b("💛 温馨提示"))
+            for tip in tips:
+                lines.append(f"· {tip}" if not markdown else f"- {tip}")
 
     return "\n".join(line for line in lines if line is not None)
 

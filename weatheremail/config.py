@@ -79,8 +79,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "record_history": True,
     },
     "send": {
-        # 无预警时也发普通简报邮件
+        # 无预警时也发普通简报
         "always_send": True,
+        # 在推送末尾附上按天气生成的温馨提示语
+        "warm_tips": True,
     },
 }
 
