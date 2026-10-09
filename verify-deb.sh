@@ -169,7 +169,7 @@ INSTALL_DIR="$UNPACK/opt/weatheremail"
 # 用解包后的代码跑 help
 cd "$INSTALL_DIR" || exit 1
 HELP_OUT=$($PY -m weatheremail -help 2>&1)
-echo "$HELP_OUT" | grep -q "天气邮件推送程序" && ok "解包后 -help 可运行" || bad "解包后 -help 可运行" "$HELP_OUT"
+echo "$HELP_OUT" | grep -q "天气推送程序" && ok "解包后 -help 可运行" || bad "解包后 -help 可运行" "$HELP_OUT"
 echo "$HELP_OUT" | grep -q -- "-email" && ok "帮助含 -email 参数" || bad "帮助含 -email 参数"
 
 VER_OUT=$($PY -m weatheremail -version 2>&1)
